@@ -1,0 +1,6 @@
+export const proxySymbol = Symbol("observing-proxy")
+export const setSymbol = Symbol("proxy-set")
+export const delSymbol = Symbol("proxy-del")
+export const wellKnownSymbols = Object.getOwnPropertyNames(Symbol)
+    .map(key => Symbol[key])
+    .filter(value => typeof value === 'symbol')

@@ -1,0 +1,29 @@
+{
+  "name": "observing",
+  "version": "1.0.0",
+  "description": "observe javascript object and notify modifications",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node esbuild"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lv-saharan/observing.git"
+  },
+  "keywords": [
+    "observe",
+    "observable",
+    "observing",
+    "binding",
+    "auto"
+  ],
+  "author": "lv-saharan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lv-saharan/observing/issues"
+  },
+  "homepage": "https://github.com/lv-saharan/observing#readme",
+  "dependencies": {
+    "esbuild": "^0.15.7"
+  }
+}
