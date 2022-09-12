@@ -1,4 +1,4 @@
-import { observe } from '../../src/index.js'
+import { observe,unobserve } from '../../src/index.js'
 
 let raw = {
     a: 1,
@@ -17,15 +17,23 @@ let observed = observe(raw, () => {
 
 setTimeout(() => {
     observed.a++
-
+    observed2.a = 123
+    unobserve(observed)
 }, 2000);
 
+observe(observed, () => {
+    console.log("callback3 changed!", observed)
 
+})
 
 window.__o = observed
 
 
+let observed2 = observe()
 
+observe(observed2, () => {
+    console.log("eeeemmmtttpppyyy")
+})
 // let observedArr = observe([1, 3, 4, 6], () => {
 
 //     console.log("callback3 changed!", observedArr)

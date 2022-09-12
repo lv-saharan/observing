@@ -1,14 +1,28 @@
 import { proxySymbol, wellKnownSymbols, setSymbol, delSymbol } from "./symbols"
+import { getProxy, setProxy } from "./proxies"
+import { addCallbackSet } from "./callbacks"
 
-const proxyMap = new WeakMap()
- 
-export default class {
+export default class Handler {
     #action = setSymbol
+    #callbacks // use Set
     constructor(...callbacks) {
-        this.callbacks = callbacks
+        this.#callbacks = new Set()
+        this.addCallbacks(...callbacks)
+
+    }
+    get callbacks() {
+        return this.#callbacks
+    }
+    addCallbacks(...callbacks) {
+        callbacks.forEach(cb => {
+            if (!this.#callbacks.has(cb)) {
+                this.#callbacks.add(cb)
+                addCallbackSet(cb, this.#callbacks)
+            }
+        })
     }
     doCallbacks() {
-        this.callbacks.forEach(callback => {
+        this.#callbacks.forEach(callback => {
             callback()
         })
     }
@@ -35,10 +49,13 @@ export default class {
         }
 
         if (typeof result === "object") {
-            let proxy = proxyMap.get(result)
+            let { proxy, handler } = getProxy(result)
             if (proxy === undefined) {
-                proxy = new Proxy(result, this)
-                proxyMap.set(result, proxy)
+                handler = new Handler(...this.#callbacks)
+                proxy = new Proxy(result, handler)
+                setProxy(result, { proxy, handler })
+            } else {
+                handler.addCallbacks(...this.#callbacks)
             }
             return proxy
         }
