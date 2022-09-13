@@ -9,7 +9,7 @@ import { getCallbackSets } from "./callbacks"
  */
 export function observe(o = {}, ...callbacks) {
     if (typeof o !== "object") {
-
+        console.error("observe need a object")
     }
     if (o[proxySymbol] === true) {
         const { handler } = getRaw(o)
@@ -27,13 +27,14 @@ export function observe(o = {}, ...callbacks) {
         proxy = new Proxy(o, _handler)
         setProxy(o, { proxy, handler: _handler })
     }
-
-
     return proxy
 }
 
 
 export function unobserve(o, ...callbacks) {
+    if (typeof o === "function") {
+        callbacks.unshift(o)
+    }
     if (callbacks.length === 0) {
         const { handler } = o[proxySymbol] === true ? getRaw(o) : getProxy(o)
         callbacks = (handler && handler.callbacks) ?? []
