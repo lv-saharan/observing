@@ -1,45 +1,27 @@
-import { observe,unobserve } from '../../src/index.js'
+import { observe, unobserve } from '../../src/index.js'
 
-let raw = {
-    a: 1,
-    b: 2,
-    c: 3,
-    d: [1, 2, 3]
+let user = {
+    name: "user",
+    age: 18,
+    likes: ["footboall", "video", "game"],
+    girlFriend: {
+        name: "sara",
+        age: 17
+    }
 }
+//root observed
+const observedUser = window.observedUser = observe(user, ({ path, oldVal, val }) => {
+    console.log("user changed", path, oldVal, val)
+})
 
-let observed = observe(raw, () => {
+const observedGrilFriend = window.observedGrilFriend = observedUser.girlFriend
 
-    console.log("callback1 changed!", observed)
-}, () => {
-    console.log("callback2 changed!", observed)
+observe(observedGrilFriend, ({ path, oldVal, val }) => {
+    console.log("girl friend changed", path, oldVal, val)
 
 })
 
-setTimeout(() => {
-    observed.a++
-    observed2.a = 123
-    unobserve(observed)
-}, 2000);
-
-observe(observed, () => {
-    console.log("callback3 changed!", observed)
+observedGrilFriend.addCallbacks(({ path, oldVal, val }) => {
+    console.log("proxy girl friend changed!!!", path, oldVal, val)
 
 })
-
-window.__o = observed
-
-
-let observed2 = observe()
-
-observe(observed2, () => {
-    console.log("eeeemmmtttpppyyy")
-})
-// let observedArr = observe([1, 3, 4, 6], () => {
-
-//     console.log("callback3 changed!", observedArr)
-// }, () => {
-//     console.log("callback4 changed!", observedArr)
-
-// })
-// observedArr.push(7788)
-

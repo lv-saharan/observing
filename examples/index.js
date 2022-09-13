@@ -1,6 +1,7 @@
 (() => {
   // src/symbols.js
   var proxySymbol = Symbol("observing-proxy");
+  var getSymbol = Symbol("proxy-get");
   var setSymbol = Symbol("proxy-set");
   var delSymbol = Symbol("proxy-del");
   var wellKnownSymbols = Object.getOwnPropertyNames(Symbol).map((key2) => Symbol[key2]).filter((value) => typeof value === "symbol");
@@ -29,13 +30,11 @@
     }
     arr.push(set);
   }
-  function getCallbackSets(cb) {
-    return callbackMap.get(cb) ?? [];
-  }
 
   // src/handler.js
   var Handler = class {
-    #action = setSymbol;
+    #action = getSymbol;
+    #path;
     #callbacks;
     constructor(...callbacks) {
       this.#callbacks = /* @__PURE__ */ new Set();
@@ -52,9 +51,9 @@
         }
       });
     }
-    doCallbacks() {
+    doCallbacks({ path, oldVal, val }) {
       this.#callbacks.forEach((callback) => {
-        callback();
+        callback({ path, oldVal, val });
       });
     }
     deleteProperty(target, property) {
@@ -63,12 +62,24 @@
       return result;
     }
     get(target, property, receiver) {
+      this.#action = getSymbol;
       if (property === proxySymbol) {
         return true;
+      }
+      if (property === "addCallbacks") {
+        return this.addCallbacks.bind(this);
       }
       const result = Reflect.get(target, property, receiver);
       if (typeof property === "symbol" && wellKnownSymbols.includes(key)) {
         return result;
+      }
+      if (!this.#path)
+        this.#path = /* @__PURE__ */ new Set();
+      Promise.resolve().then(() => {
+        this.#path = null;
+      });
+      if (target instanceof Array === false) {
+        this.#path.add(property);
       }
       if (typeof result === "object") {
         let { proxy, handler } = getProxy(result);
@@ -79,22 +90,23 @@
         } else {
           handler.addCallbacks(...this.#callbacks);
         }
+        handler.#path = this.#path;
         return proxy;
       }
       return result;
     }
-    has(target, property) {
-      return Reflect.has(target, property);
-    }
-    ownKeys(target) {
-      return Reflect.ownKeys(target);
-    }
     set(target, property, value, receiver) {
+      const oldVal = Reflect.get(target, property, receiver);
       const result = Reflect.set(target, property, value, receiver);
-      if (target instanceof Array && property === "length" && this.#action !== delSymbol) {
-        return result;
+      if (!(target instanceof Array && property === "length" && this.#action !== delSymbol)) {
+        if (!this.#path)
+          this.#path = /* @__PURE__ */ new Set();
+        Promise.resolve().then(() => {
+          this.#path = null;
+        });
+        this.#path.add(property);
+        this.doCallbacks({ path: [...this.#path], oldVal, val: value });
       }
-      this.doCallbacks();
       this.#action = setSymbol;
       return result;
     }
@@ -103,6 +115,7 @@
   // src/index.js
   function observe(o = {}, ...callbacks) {
     if (typeof o !== "object") {
+      console.error("observe need a object");
     }
     if (o[proxySymbol] === true) {
       const { handler: handler2 } = getRaw(o);
@@ -121,43 +134,26 @@
     }
     return proxy;
   }
-  function unobserve(o, ...callbacks) {
-    if (callbacks.length === 0) {
-      const { handler } = o[proxySymbol] === true ? getRaw(o) : getProxy(o);
-      callbacks = (handler && handler.callbacks) ?? [];
-    }
-    callbacks.forEach((cb) => {
-      const sets = getCallbackSets(cb);
-      sets.forEach((set) => {
-        set.delete(cb);
-      });
-    });
-  }
 
   // examples/src/index.js
-  var raw = {
-    a: 1,
-    b: 2,
-    c: 3,
-    d: [1, 2, 3]
+  var user = {
+    name: "user",
+    age: 18,
+    likes: ["footboall", "video", "game"],
+    girlFriend: {
+      name: "sara",
+      age: 17
+    }
   };
-  var observed = observe(raw, () => {
-    console.log("callback1 changed!", observed);
-  }, () => {
-    console.log("callback2 changed!", observed);
+  var observedUser = window.observedUser = observe(user, ({ path, oldVal, val }) => {
+    console.log("user changed", path, oldVal, val);
   });
-  setTimeout(() => {
-    observed.a++;
-    observed2.a = 123;
-    unobserve(observed);
-  }, 2e3);
-  observe(observed, () => {
-    console.log("callback3 changed!", observed);
+  var observedGrilFriend = window.observedGrilFriend = observedUser.girlFriend;
+  observe(observedGrilFriend, ({ path, oldVal, val }) => {
+    console.log("girl friend changed", path, oldVal, val);
   });
-  window.__o = observed;
-  var observed2 = observe();
-  observe(observed2, () => {
-    console.log("eeeemmmtttpppyyy");
+  observedGrilFriend.addCallbacks(({ path, oldVal, val }) => {
+    console.log("proxy girl friend changed!!!", path, oldVal, val);
   });
 })();
 //# sourceMappingURL=index.js.map

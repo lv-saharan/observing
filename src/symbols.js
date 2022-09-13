@@ -1,4 +1,5 @@
 export const proxySymbol = Symbol("observing-proxy")
+export const getSymbol = Symbol("proxy-get")
 export const setSymbol = Symbol("proxy-set")
 export const delSymbol = Symbol("proxy-del")
 export const wellKnownSymbols = Object.getOwnPropertyNames(Symbol)
