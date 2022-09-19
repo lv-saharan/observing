@@ -1,6 +1,6 @@
 {
   "name": "observing",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "observe javascript object and notify modifications",
   "main": "src/index.js",
   "scripts": {
@@ -15,7 +15,9 @@
     "observable",
     "observing",
     "binding",
-    "auto"
+    "auto",
+    "omi",
+    "omii"
   ],
   "author": "lv-saharan",
   "license": "MIT",
