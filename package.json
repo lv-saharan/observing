@@ -1,6 +1,6 @@
 {
   "name": "observing",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "observe javascript object and notify modifications",
   "main": "src/index.js",
   "scripts": {

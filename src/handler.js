@@ -55,7 +55,7 @@ export default class Handler {
             return this.addCallbacks.bind(this)
         }
         const result = Reflect.get(target, property, receiver)
-        if (typeof property === 'symbol' && wellKnownSymbols.includes(key)) {
+        if (typeof property === 'symbol' && wellKnownSymbols.includes(property)) {
             return result
         }
 
